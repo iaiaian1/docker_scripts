@@ -37,8 +37,8 @@ ADMIN_PASSWORD='frappe'
 ## Setup Instructions
 1. Clone this repository:
    ```bash:disable-run
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/iaiaian1/docker_scripts.git
+   cd docker_scripts
    ```
 
 2. Customize the `.env` file as needed (see above).
@@ -51,12 +51,15 @@ ADMIN_PASSWORD='frappe'
 4. Access the container to manage or pull the latest changes:
    ```bash
    docker compose exec -it frappe bash
+
+   # The BENCH you set in .env
+   cd frappe_bench
    ```
 
 5. (Optional) Install additional apps:
    - Modify `init.sh` or `init_dev.sh` to include additional apps using:
      ```bash
-     bench get-app hrms
+     bench get-app app_name
      ```
    - Run the modified script inside the container to install the app.
 
@@ -71,9 +74,9 @@ ADMIN_PASSWORD='frappe'
   docker compose stop
   ```
 - To **DELETE** the container, run:
-```bash
-docker compose down
-```
+   ```bash
+   docker compose down
+   ```
 
 ## Troubleshooting
 - If the container fails to start, check the logs:
@@ -87,5 +90,3 @@ Feel free to submit issues or pull requests to improve this setup.
 
 ## License
 This project is licensed under the MIT License.
-
-```
