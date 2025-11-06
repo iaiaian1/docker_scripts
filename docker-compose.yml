@@ -29,5 +29,12 @@ services:
       - ${BENCH_HTTP_PORT}:8000
       - ${BENCH_WS_PORT}:9000
 
+  # Testing for online access
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+    # command: tunnel --url http://localhost:${BENCH_HTTP_PORT}
+    # command: tunnel --no-autoupdate run --token ${TOKEN}
+    # restart: unless-stopped
+
 volumes:
   mariadb-data:
