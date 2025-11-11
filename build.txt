@@ -1,0 +1,79 @@
+# Guide:
+https://github.com/frappe/frappe_docker/blob/main/docs/container-setup/02-build-setup.md
+
+===
+# Build image:
+
+docker build --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe --build-arg=FRAPPE_BRANCH=version-15 --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=testing/layered:15 --file=Dockerfile .
+
+===
+# Generate compose file:
+docker compose --env-file .env -f compose.yaml  -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.noproxy.yaml config > compose.custom.yaml
+
+===
+# Commands 
+
+# Create site
+docker compose -p frappe exec backend bench new-site test.local --mariadb-user-host-login-scope='172.%.%.%'
+docker compose -p frappe exec backend bench --site <sitename> install-app erpnext
+
+Copying Files from Containers
+# Copy entire app from container to host
+docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/apps/my_app ./local-apps/
+
+# Copy logs
+docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/logs/ ./debug-logs/
+
+# Copy site files
+docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/sites/mysite.com ./backup/
+
+
+===
+# Goal - Use These Overrides to generate a docker compose file (ORDER MATTERS)
+Automated Backups - Add compose.backup-cron.yaml to any stack
+Use PostgreSQL - Replace mariadb with compose.postgres.yaml
+
+Local Development (Docker Desktop) - port based, single bench
+docker compose --env-file .env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.noproxy.yaml config > compose/compose.local.yaml
+
+Local Development (Docker Desktop) - proxy, single bench
+docker compose --env-file .env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.proxy.yaml config > compose/compose.local_proxy.yaml
+
+Local Development (Docker Desktop) - proxy, multiple bench
+docker compose --env-file .env -f compose.yaml -f overrides/compose.redis.yaml -f overrides/compose.multi-bench.yaml -f overrides/compose.mariadb-shared.yaml -f overrides/compose.traefik.yaml config > compose/compose.local_multi_proxy.yaml
+
+Production (Single Site + SSL) - compose.mariadb.yaml + compose.redis.yaml + compose.traefik.yaml + compose.traefik-ssl.yaml + compose.custom-domain-ssl.yaml
+
+Production (Multiple Sites + SSL) - compose.mariadb.yaml + compose.redis.yaml + compose.traefik.yaml + compose.traefik-ssl.yaml + compose.multi-bench-ssl.yaml
+
+===
+File - Purpose - When to Use - Key Services / Changes
+compose.backup-cron.yaml - Automated backups using frappe/backup image - You want daily DB + files backups - backup-cron service, cron schedule, S3/minio upload
+
+compose.custom-domain-ssl.yaml - SSL for custom domain (Let’s Encrypt) + Traefik - Production with erp.example.com + HTTPS - traefik + cert-resolver, FRAPPE_SITE_NAME, LETSENCRYPT_EMAIL
+
+compose.custom-domain.yaml - Custom domain without SSL (HTTP only) - Dev/test with erp.local - Sets VIRTUAL_HOST, FRAPPE_SITE_NAME
+
+compose.https.yaml - Force HTTPS redirect (via Traefik) - Any site using Traefik + SSL - Adds traefik.http.routers.*.entrypoints=websecure, redirect middleware
+
+compose.mariadb-secrets.yaml - MariaDB credentials via Docker secrets - Production (swarm/secrets) - mariadb uses /run/secrets/db_root_password
+
+compose.mariadb-shared.yaml - Shared MariaDB for multiple benches - Multi-tenant / multi-site on same DB - mariadb with shared socket, multiple frappe-python connect
+
+compose.mariadb.yaml - Add MariaDB service - You don’t use external DB - mariadb:10.6, UTF8MB4, root password via .env
+
+compose.multi-bench-ssl.yaml - Multiple Frappe sites (benches) + SSL - Run site1.com, site2.com behind one proxy - Multiple frappe-web + Traefik labels per domain
+
+compose.multi-bench.yaml - Multiple Frappe benches (no SSL) - Dev: run 2+ sites on same host - Multiple frappe-python-*, shared Redis/MariaDB
+
+compose.noproxy.yaml - Disable Traefik, expose ports directly - Local dev, Docker Desktop, no reverse proxy - Removes traefik, maps 8000:8000, 9000:9000
+
+compose.postgres.yaml - Use PostgreSQL instead of MariaDB - You prefer Postgres - postgres:15, POSTGRES_PASSWORD, DB_HOST=postgres
+
+compose.proxy.yaml - Enable Traefik (HTTP only) - Reverse proxy, multiple sites, no SSL - traefik with web entrypoint, VIRTUAL_HOST
+
+compose.redis.yaml - Add Redis (queue, cache, socketio) - Required for background jobs, real-time - redis-queue, redis-cache, redis-socketio
+
+compose.traefik-ssl.yaml - Traefik + Automatic Let’s Encrypt SSL - Production HTTPS - traefik, websecure, certificatesresolvers, LETSENCRYPT_EMAIL
+
+compose.traefik.yaml - Base Traefik reverse proxy - Foundation for all proxy overrides - traefik image, dashboard, web entrypoint
