@@ -33,14 +33,14 @@ docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/sites/mysite.com 
 Automated Backups - Add compose.backup-cron.yaml to any stack
 Use PostgreSQL - Replace mariadb with compose.postgres.yaml
 
-Local Development (Docker Desktop) - port based, single bench
-docker compose --env-file .env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.noproxy.yaml config > compose/compose.local.yaml
+Local Development (Docker Desktop) - port based, http, for development and cron
+docker compose --env-file compose.env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.noproxy.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local.yaml
 
-Local Development (Docker Desktop) - proxy, single bench
-docker compose --env-file .env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.proxy.yaml config > compose/compose.local_proxy.yaml
+Local Development (Docker Desktop) - unsecure proxy, http, for development and cron
+docker compose --env-file compose.env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.proxy.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local_proxy.yaml
 
-Local Development (Docker Desktop) - proxy, multiple bench
-docker compose --env-file .env -f compose.yaml -f overrides/compose.redis.yaml -f overrides/compose.multi-bench.yaml -f overrides/compose.mariadb-shared.yaml -f overrides/compose.traefik.yaml config > compose/compose.local_multi_proxy.yaml
+Local Development (Docker Desktop) - secure proxy, http, for dev/prod and cron
+docker compose --env-file compose.env -f compose.yaml -f overrides/compose.redis.yaml -f overrides/compose.multi-bench.yaml -f overrides/compose.mariadb-shared.yaml -f overrides/compose.traefik.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local_multi_proxy.yaml
 
 Production (Single Site + SSL) - compose.mariadb.yaml + compose.redis.yaml + compose.traefik.yaml + compose.traefik-ssl.yaml + compose.custom-domain-ssl.yaml
 
