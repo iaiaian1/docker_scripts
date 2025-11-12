@@ -13,11 +13,21 @@ docker compose --env-file .env -f compose.yaml  -f overrides/compose.mariadb.yam
 ===
 # Commands 
 
+# Create site FOR compose.local.yaml - it must be localhost then access in localhost:8080
+# You can create test.local but you must add it in your hosts file. 127.0.0.1 test.local
+docker compose -p frappe exec backend bench new-site localhost --mariadb-user-host-login-scope='172.%.%.%'
+docker compose -p frappe exec backend bench --site localhost install-app erpnext
+
 # Create site
 docker compose -p frappe exec backend bench new-site test.local --mariadb-user-host-login-scope='172.%.%.%'
 docker compose -p frappe exec backend bench --site <sitename> install-app erpnext
 
-Copying Files from Containers
+# Copy file/folder from local to container
+docker compose cp db.sql backend:home/frappe/frappe-bench
+
+# Copy file/folder from container to local
+docker compose cp backend:home/frappe/frappe-bench/sites/common_site_config.json .
+
 # Copy entire app from container to host
 docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/apps/my_app ./local-apps/
 
@@ -36,13 +46,14 @@ Use PostgreSQL - Replace mariadb with compose.postgres.yaml
 Local Development (Docker Desktop) - port based, http, for development and cron
 docker compose --env-file compose.env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.noproxy.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local.yaml
 
-Local Development (Docker Desktop) - unsecure proxy, http, for development and cron
+Local Development (Docker Desktop) - unsecure proxy, http, for development and cron - add to hosts file
 docker compose --env-file compose.env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.proxy.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local_proxy.yaml
 
-Local Development (Docker Desktop) - secure proxy, http, for dev/prod and cron
+Local Development (Docker Desktop) - secure proxy, http, for dev/prod and cron - add to hosts file
 docker compose --env-file compose.env -f compose.yaml -f overrides/compose.redis.yaml -f overrides/compose.multi-bench.yaml -f overrides/compose.mariadb-shared.yaml -f overrides/compose.traefik.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.local_multi_proxy.yaml
 
-Production (Single Site + SSL) - compose.mariadb.yaml + compose.redis.yaml + compose.traefik.yaml + compose.traefik-ssl.yaml + compose.custom-domain-ssl.yaml
+Production (Single Site + SSL) 
+docker compose --env-file compose.env -f compose.yaml -f overrides/compose.mariadb.yaml -f overrides/compose.redis.yaml -f overrides/compose.https.yaml -f overrides/compose.backup-cron.yaml config > compose/compose.https.yaml
 
 Production (Multiple Sites + SSL) - compose.mariadb.yaml + compose.redis.yaml + compose.traefik.yaml + compose.traefik-ssl.yaml + compose.multi-bench-ssl.yaml
 
