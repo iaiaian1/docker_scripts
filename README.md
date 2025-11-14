@@ -1,92 +1,300 @@
-# Frappe with ERPNext Docker Setup
+# **Frappe / ERPNext Docker Environment**
 
-This repository provides a customizable Docker-based setup for running Frappe with ERPNext. Follow the instructions below to configure and run the container.
+A modular, developer-friendly setup for running **Frappe Framework**, **ERPNext**, and **custom apps** using Docker.
+Supports:
 
-## Prerequisites
-- [Git](https://git-scm.com/downloads), [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/) installed on your system.
-- Basic knowledge of Docker and Frappe/ERPNext.
+* Local development
+* Multi-bench setups
+* Production deployments with Traefik + SSL
+* Custom image building from apps.json (including private repos)
 
-## Configuration
-Customize the `.env` file to suit your needs. Below is an explanation of the environment variables:
+---
 
-- **CONTAINER_NAME**: Name of the Docker container (default: `Frappe with ERPNext`).
-- **INSTALL_ERPNEXT**: Set to `1` to install ERPNext, `0` to skip (only for new containers).
-- **FRAPPE_VERSION**: Frappe and ERPNext version (supported: `version-15` or `version-14`; `version-13` is no longer supported).
-- **BENCH**: Name of the Frappe bench (default: `frappe_bench`).
-- **BENCH_HTTP_PORT**: HTTP port for the bench (default: `8000`).
-- **BENCH_WS_PORT**: WebSocket port for the bench (default: `9000`).
-- **SITE_NAME**: Site name for the Frappe instance (default: `test.localhost`).
-- **MYSQL_ROOT_PASSWORD**: MySQL root password (default: `frappe`).
-- **MARIADB_PASSWORD**: MariaDB password (default: `frappe`).
-- **ADMIN_PASSWORD**: Admin password for the Frappe/ERPNext site (default: `frappe`).
+# **📦 Prerequisites**
 
-Example `.env` file:
-```
-CONTAINER_NAME='Frappe with ERPNext'
-INSTALL_ERPNEXT=1
-FRAPPE_VERSION='version-15'
-BENCH='frappe_bench'
-BENCH_HTTP_PORT=8000
-BENCH_WS_PORT=9000
-SITE_NAME='test.localhost'
-MYSQL_ROOT_PASSWORD='frappe'
-MARIADB_PASSWORD='frappe'
-ADMIN_PASSWORD='frappe'
-```
+Make sure the following are installed:
 
-## Setup Instructions
-1. Clone this repository:
-   ```bash:disable-run
-   git clone https://github.com/iaiaian1/docker_scripts.git
-   cd docker_scripts
-   ```
+* **Git**
+* **Docker**
+* **Docker Compose**
 
-2. Customize the `.env` file as needed (see above).
+---
 
-3. Start the container:
+# **🚀 How to Use (Consumers)**
+
+This is the *simple workflow* for anyone who just wants to run the Frappe/ERPNext container.
+
+1. Clone the repo:
+
    ```bash
-   docker compose up -d
+   git clone https://github.com/iaiaian1/docker_scripts -b docker
    ```
+2. Start the container:
 
-4. Access the container to manage or pull the latest changes:
    ```bash
-   docker compose exec -it frappe bash
-
-   # The BENCH you set in .env
-   cd frappe_bench
+   docker compose -f compose/compose.local.yaml up -d
    ```
+3. Create a site:
 
-5. (Optional) Install additional apps:
-   - Modify `init.sh` or `init_dev.sh` to include additional apps using:
-     ```bash
-     bench get-app app_name
-     ```
-   - Run the modified script inside the container to install the app.
+   ```bash
+   docker compose exec backend bench new-site localhost --mariadb-user-host-login-scope='172.%.%.%'
+   ```
+4. Default MySQL root password when asked:
 
-## Accessing the Application
-- Once the container is running, access the Frappe/ERPNext site at `http://localhost:<BENCH_HTTP_PORT>` (e.g., `http://localhost:8000`).
-- Log in with the admin credentials specified in the `.env` file (default: username `Administrator`, password `frappe`).
+   ```
+   frappe
+   ```
+5. Set the Administrator password when asked.
+6. Open your browser:
 
-## Notes
-- Ensure the ports specified in `BENCH_HTTP_PORT` and `BENCH_WS_PORT` are not in use on your host machine.
-- To **STOP** the container, run:
+   ```
+   http://localhost:8080
+   ```
+7. To install ERPNext
+    ```
+    docker compose exec backend bench --site localhost install-app erpnext
+    ```
+
+---
+
+# **🛠 How This Works (Developers)**
+
+This repository supports **two development paths**:
+
+### **1. Using prebuilt Docker Compose templates and Frappe's Official Image**
+
+* **Generate** a compose file using the provided overrides.
+* Run using:
+
   ```bash
-  docker compose stop
+  docker compose -f compose.yaml up -d
   ```
-- To **DELETE** the container, run:
-   ```bash
-   docker compose down
-   ```
+* Includes **Frappe + ERPNext** by default.
 
-## Troubleshooting
-- If the container fails to start, check the logs:
-  ```bash
-  docker compose logs frappe
-  ```
-- Ensure the `.env` file is correctly formatted and all required variables are set.
+### **2. Building your own custom Frappe image**
 
-## Contributing
-Feel free to submit issues or pull requests to improve this setup.
+* Define your apps in `apps.json`
+* Build an image containing your custom apps
+* Generate a compose file matching your needs
+* Run using your own custom Frappe stack
 
-## License
-This project is licensed under the MIT License.
+---
+
+# **🏗 Building a Custom Image**
+
+### **Adding Private Repos**
+
+Update your apps.json entry like:
+
+```json
+[
+    {
+        "url": "https://github.com/frappe/erpnext",
+        "branch": "version-15"
+    },
+    {
+        "url": "https://<GITHUB_USERNAME>:<GITHUB_TOKEN>@github.com/repository/app_name",
+        "branch": "version-15"
+    }
+]
+```
+
+### **Encode apps.json**
+
+```bash
+export APPS_JSON_BASE64=$(base64 -w 0 apps.json)
+```
+
+or
+
+```bash
+APPS_JSON_BASE64=$(base64 -w 0 apps.json)
+```
+
+### **Choose the desired Dockerfile**
+This repository uses the **"Layered"** Dockerfile.
+
+> Great for production builds when you’re fine with the dependency versions managed by Frappe. Builds much faster since the base layers are already prepared.
+
+**ℹ️ Source: https://github.com/frappe/frappe_docker/blob/main/docs/container-setup/01-overview.md**
+
+### **Build commands**
+
+```bash
+docker build --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
+             --build-arg=FRAPPE_BRANCH=version-15 \
+             --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
+             --tag=image/name:15 \
+             --file=Dockerfile .
+```
+
+---
+
+# **🧩 Generating a Compose File**
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.noproxy.yaml \
+  config > compose.custom.yaml
+```
+
+---
+
+# **🐳 Useful Docker Commands**
+
+### **Create a Site (for compose.local.yaml)**
+
+```bash
+docker compose exec backend bench new-site localhost --mariadb-user-host-login-scope='172.%.%.%'
+docker compose exec backend bench --site localhost install-app erpnext
+```
+
+### **Create a Site (custom domain)**
+
+```bash
+docker compose exec backend bench new-site test.local --mariadb-user-host-login-scope='172.%.%.%'
+docker compose exec backend bench --site test.local install-app erpnext
+```
+
+### **Copy file/folder**
+
+**Local → Container**
+
+```bash
+docker compose cp db.sql backend:home/frappe/frappe-bench
+```
+
+**Container → Local**
+
+```bash
+docker compose cp backend:home/frappe/frappe-bench/sites/common_site_config.json .
+```
+
+**Copy logs**
+
+```bash
+docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/logs/ ./debug-logs/
+```
+
+**Copy site files**
+
+```bash
+docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/sites/mysite.com ./backup/
+```
+
+---
+
+# **📐 Docker Compose Templates**
+
+Use override files to produce the exact stack you need.
+
+## **Local Development**
+
+**Port-based, HTTP, cron included**
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.noproxy.yaml \
+  -f overrides/compose.backup-cron.yaml \
+  config > compose/compose.local.yaml
+```
+
+**HTTP Proxy (requires hosts file)**
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.proxy.yaml \
+  -f overrides/compose.backup-cron.yaml \
+  config > compose/compose.local_proxy.yaml
+```
+
+**HTTP Proxy (requires hosts file) + multi-bench**
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.multi-bench.yaml \
+  -f overrides/compose.mariadb-shared.yaml \
+  -f overrides/compose.traefik.yaml \
+  -f overrides/compose.backup-cron.yaml \
+  config > compose/compose.local_multi_proxy.yaml
+```
+
+---
+
+# ** ⚠️ WIP - 🔐 Production / SSL / HTTPS**
+
+### **Single Site + SSL**
+
+```bash
+docker compose --env-file .env \
+  -f compose.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.https.yaml \
+  -f overrides/compose.backup-cron.yaml \
+  config > compose/compose.https.yaml
+```
+
+### **Multiple Sites + SSL**
+
+Combine:
+
+```bash
+WIP
+```
+
+---
+
+# **⚠️ WIP - 🌐 Shared Apps Mode**
+
+Apps get their own volume, useful for multi-project dev.
+
+```bash
+docker compose --env-file .env \
+  -f compose_shared_apps.yaml \
+  -f overrides/compose.mariadb.yaml \
+  -f overrides/compose.redis.yaml \
+  -f overrides/compose.noproxy.yaml \
+  -f overrides/compose.backup-cron.yaml \
+  config > compose/compose.shared_local.yaml
+```
+
+---
+
+# **⚠️ WIP - 📄 Override Files Reference**
+
+| Override File                      | Purpose                       | When to Use                      | Key Services / Changes     |
+| ---------------------------------- | ----------------------------- | -------------------------------- | -------------------------- |
+| **compose.backup-cron.yaml**       | Automated backups             | Need automatic DB + files backup | backup-cron service        |
+| **compose.custom-domain-ssl.yaml** | Custom domain + SSL           | Production                       | Traefik + cert resolver    |
+| **compose.custom-domain.yaml**     | Custom HTTP domain            | Local testing                    | VIRTUAL_HOST settings      |
+| **compose.https.yaml**             | Force HTTPS                   | Using Traefik + SSL              | Redirect middleware        |
+| **compose.mariadb-secrets.yaml**   | Secrets-based DB passwd       | Swarm / secure deployments       | Uses Docker secrets        |
+| **compose.mariadb-shared.yaml**    | Shared MariaDB across benches | Multi-site hosting               | Shared DB host             |
+| **compose.mariadb.yaml**           | MariaDB service               | Default setups                   | mariadb:10.6               |
+| **compose.multi-bench-ssl.yaml**   | Multi-site SSL                | Multi-tenant prod                | Traefik SSL routing        |
+| **compose.multi-bench.yaml**       | Multiple benches              | Dev multi-bench                  | Multiple backends          |
+| **compose.noproxy.yaml**           | Remove Traefik                | Classic port-based dev           | Exposes ports 8000/9000    |
+| **compose.postgres.yaml**          | PostgreSQL support            | Using Postgres                   | postgres:15                |
+| **compose.proxy.yaml**             | Enable Traefik (HTTP only)    | Reverse proxy dev                | web entrypoint             |
+| **compose.redis.yaml**             | Redis services                | Queue, Cache, SocketIO           | redis-queue/cache/socketio |
+| **compose.traefik-ssl.yaml**       | Traefik + Let’s Encrypt SSL   | Production HTTPS                 | websecure entrypoint       |
+| **compose.traefik.yaml**           | Base Traefik Config           | Proxy setups                     | Traefik dashboard          |
+
+---
+
+# **📚 Reference**
+
+Official Frappe Docker documentation:
+[https://github.com/frappe/frappe_docker/](https://github.com/frappe/frappe_docker/)
