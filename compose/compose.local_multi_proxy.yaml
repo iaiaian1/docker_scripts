@@ -76,6 +76,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
       - --skip-innodb-read-only-compressed
+      - --max-allowed-packet=256M # Enable big restores
     container_name: mariadb-database
     environment:
       MARIADB_AUTO_UPGRADE: "1"

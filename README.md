@@ -185,6 +185,14 @@ docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/logs/ ./debug-log
 docker compose -f pwd.yml cp backend:/home/frappe/frappe-bench/sites/mysite.com ./backup/
 ```
 
+**Increase and max_allowed_packet for big restores**
+
+```bash
+docker exec -it docker_scripts-db-1 mariadb --user=root --password=frappe --execute="SET GLOBAL max_allowed_packet = 268435456;"
+
+docker exec -it docker_scripts-db-1 mariadb --user=root --password=frappe --execute="SHOW VARIABLES LIKE 'max_allowed_packet';"
+```
+
 ---
 
 # **📐 Docker Compose Templates**
