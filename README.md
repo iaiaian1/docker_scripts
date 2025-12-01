@@ -121,7 +121,8 @@ This repository uses the **"Layered"** Dockerfile.
 ### **Build commands**
 
 ```bash
-docker build --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
+docker build --no-cache \
+             --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
              --build-arg=FRAPPE_BRANCH=version-15 \
              --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
              --tag=image/name:15 \
@@ -145,7 +146,13 @@ docker compose --env-file .env \
 
 # **🐳 Useful Docker Commands**
 
-### **Create a Site (for compose.local.yaml)**
+### **Create a Site (for compose.local.yaml) V14**
+
+```bash
+docker compose exec backend bench new-site localhost --no-mariadb-socket
+docker compose exec backend bench --site localhost install-app erpnext
+```
+### **Create a Site (for compose.local.yaml) V15**
 
 ```bash
 docker compose exec backend bench new-site localhost --mariadb-user-host-login-scope='172.%.%.%'
@@ -157,6 +164,14 @@ docker compose exec backend bench --site localhost install-app erpnext
 ```bash
 docker compose exec backend bench new-site test.local --mariadb-user-host-login-scope='172.%.%.%'
 docker compose exec backend bench --site test.local install-app erpnext
+```
+
+### **Updating a Container**
+
+```bash
+docker compose -f compose/compose.local.yaml pull
+docker compose -f compose/compose.local.yaml up -d --remove-orphans
+docker compose -f compose/compose.local.yaml up -d --force-recreate --remove-orphans
 ```
 
 ### **Copy file/folder**
@@ -240,7 +255,7 @@ docker compose --env-file .env \
 
 ---
 
-# ** ⚠️ WIP - 🔐 Production / SSL / HTTPS**
+# **⚠️ WIP - 🔐 Production / SSL / HTTPS**
 
 ### **Single Site + SSL**
 
