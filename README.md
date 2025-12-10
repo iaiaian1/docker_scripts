@@ -67,13 +67,14 @@ This repository supports **two development paths**:
 * Run using:
 
   ```bash
-  docker compose -f compose.yaml up -d
+  docker compose -f <compose.yaml> up -d
   ```
 * Includes **Frappe + ERPNext** by default.
 
 ### **2. Building your own custom Frappe image**
 
-* Define your apps in `apps.json`
+* Define your apps in `apps.json` and encode it
+* Read and customize .env
 * Build an image containing your custom apps
 * Generate a compose file matching your needs
 * Run using your own custom Frappe stack
