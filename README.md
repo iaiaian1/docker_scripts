@@ -15,8 +15,8 @@ Supports:
 Make sure the following are installed:
 
 * **Git**
-* **Docker**
-* **Docker Compose**
+* **[Docker Desktop](https://www.docker.com/products/docker-desktop/) for Windows and Linux**
+* **[Docker Engine](https://docs.docker.com/engine/) for Linux**
 
 ---
 
