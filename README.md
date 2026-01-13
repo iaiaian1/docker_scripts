@@ -29,38 +29,38 @@ This is the *simple workflow* for anyone who just wants to run the Frappe/ERPNex
    ```bash
    git clone https://github.com/iaiaian1/docker_scripts -b aruga_acct
    ```
-2. Build the image (ERPNext + Aruga accounting):
+1.1. (Optional) Build the image (ERPNext + Aruga accounting):
 
    ```bash
    docker build --no-cache \
              --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
              --build-arg=FRAPPE_BRANCH=version-15 \
              --build-arg=APPS_JSON_BASE64=WwogICAgewogICAgICAgICJ1cmwiOiAiaHR0cHM6Ly9naXRodWIuY29tL2ZyYXBwZS9lcnBuZXh0IiwKICAgICAgICAiYnJhbmNoIjogInZlcnNpb24tMTUiCiAgICB9LAogICAgewogICAgICAgICJ1cmwiOiAiaHR0cHM6Ly9naXRodWIuY29tL05leHRTZXJ2L2FydWdhX2FjY3QiLAogICAgICAgICJicmFuY2giOiAibWFpbiIKICAgIH0KXQ== \
-             --tag=servio/aruga_acct:v0.0.1 \
+             --tag=serviodocker/aruga_acct:v0.0.1 \
              --file=Dockerfile .
    ```
-3. Start the container:
+2. Start the container:
 
    ```bash
    docker compose -f compose/compose.custom_local.yaml up -d
    ```
-4. Create a site:
+3. Create a site:
 
    ```bash
    docker compose exec backend bench new-site localhost --mariadb-user-host-login-scope='172.%.%.%'
    ```
-5. Default MySQL root password when asked:
+4. Default MySQL root password when asked:
 
    ```
    frappe
    ```
-6. Set the Administrator password when asked.
-7. Open your browser:
+5. Set the Administrator password when asked.
+6. Open your browser:
 
    ```
    http://localhost:8080
    ```
-8. To install ERPNext and Aruga Accounting
+7. To install ERPNext and Aruga Accounting
     ```
     docker compose exec backend bench --site localhost install-app erpnext aruga_acct
     ```
@@ -135,7 +135,7 @@ docker build --no-cache \
              --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
              --build-arg=FRAPPE_BRANCH=version-15 \
              --build-arg=APPS_JSON_BASE64=WwogICAgewogICAgICAgICJ1cmwiOiAiaHR0cHM6Ly9naXRodWIuY29tL2ZyYXBwZS9lcnBuZXh0IiwKICAgICAgICAiYnJhbmNoIjogInZlcnNpb24tMTUiCiAgICB9LAogICAgewogICAgICAgICJ1cmwiOiAiaHR0cHM6Ly9naXRodWIuY29tL05leHRTZXJ2L2FydWdhX2FjY3QiLAogICAgICAgICJicmFuY2giOiAibWFpbiIKICAgIH0KXQ== \
-             --tag=servio/aruga_acct:v0.0.1 \
+             --tag=serviodocker/aruga_acct:v0.0.1 \
              --file=Dockerfile .
 ```
 
