@@ -4,7 +4,11 @@
         "branch": "version-15"
     },
     {
-        "url": "https://github.com/NextServ/aruga_acct",
+        "url": "https://github.com/frappe/hrms",
+        "branch": "version-15"
+    },
+    {
+        "url": "https://github.com/NextServ/aruga_pay",
         "branch": "main"
     }
 ]
